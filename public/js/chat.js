@@ -1,16 +1,16 @@
 // This file is executed in the browser, when people visit /chat/<random id>
 
 $(function(){
-
+var urlSplittedData	=window.location.pathname.split('/');
 	// getting the id of the room from the url
-	var id = Number(window.location.pathname.match(/\/chat\/(\d+)$/)[1]);
-
+	var id = parseInt(urlSplittedData[2]);
+var jas="https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/11218827_1483858431924853_7806154371084994884_n.jpg?oh=53297ae8f9552f2f5015bc767ea4f22d&oe=586291FA";
+	var kabeer="https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/14322426_1670263316635667_5342806033417957035_n.jpg?oh=69cfb47f936a574d3cfdcbadf5915746&oe=5867CF91";
 	// connect to the socket
-	var socket = io.connect('/socket');
+	var socket = io();
 
 	// variables which hold the data for each person
 	var name = "",
-		email = "",
 		img = "",
 		friend = "";
 
@@ -30,9 +30,7 @@ $(function(){
 		leftNickname = $(".nickname-left"),
 		loginForm = $(".loginForm"),
 		yourName = $("#yourName"),
-		yourEmail = $("#yourEmail"),
 		hisName = $("#hisName"),
-		hisEmail = $("#hisEmail"),
 		chatForm = $("#chatform"),
 		textarea = $("#message"),
 		messageTimeSent = $(".timesent"),
@@ -57,68 +55,17 @@ $(function(){
 
 	// receive the names and avatars of all people in the chat room
 	socket.on('peopleinchat', function(data){
-
 		if(data.number === 0){
-
-			showMessage("connected");
-
-			loginForm.on('submit', function(e){
-
-				e.preventDefault();
-
-				name = $.trim(yourName.val());
-				
-				if(name.length < 1){
-					alert("Please enter a nick name longer than 1 character!");
-					return;
-				}
-
-				email = yourEmail.val();
-
-				if(!isValid(email)) {
-					alert("Please enter a valid email!");
-				}
-				else {
-
-					showMessage("inviteSomebody");
-
-					// call the server-side function 'login' and send user's parameters
-					socket.emit('login', {user: name, avatar: email, id: id});
-				}
-			
-			});
+			$("#yourName").val(urlSplittedData[3]);
+			name = $.trim(yourName.val());
+			socket.emit('login', {user: name, avatar:kabeer , id: id});
+			showMessage("inviteSomebody");
 		}
 
 		else if(data.number === 1) {
-
-			showMessage("personinchat",data);
-
-			loginForm.on('submit', function(e){
-
-				e.preventDefault();
-
-				name = $.trim(hisName.val());
-
-				if(name.length < 1){
-					alert("Please enter a nick name longer than 1 character!");
-					return;
-				}
-
-				if(name == data.user){
-					alert("There already is a \"" + name + "\" in this room!");
-					return;
-				}
-				email = hisEmail.val();
-
-				if(!isValid(email)){
-					alert("Wrong e-mail format!");
-				}
-				else{
-
-					socket.emit('login', {user: name, avatar: email, id: id});
-				}
-
-			});
+			$("#hisName").val(urlSplittedData[3]);
+			name = $.trim(hisName.val());
+			socket.emit('login', {user: name, avatar: jas, id: id});
 		}
 
 		else {
@@ -127,7 +74,7 @@ $(function(){
 
 	});
 
-	// Other useful 
+	// Other useful
 
 	socket.on('startChat', function(data){
 		if(data.boolean && data.id == id) {
@@ -135,11 +82,11 @@ $(function(){
 			chats.empty();
 
 			if(name === data.users[0]) {
-
+console.log(data);
 				showMessage("youStartedChatWithNoMessages",data);
 			}
 			else {
-
+				console.log(data);
 				showMessage("heStartedChatWithNoMessages",data);
 			}
 
@@ -167,10 +114,12 @@ $(function(){
 
 	socket.on('receive', function(data){
 
-			showMessage('chatStarted');
+		showMessage('chatStarted');
 
+		if(data.msg.trim().length) {
 			createChatMessage(data.msg, data.user, data.img, moment());
 			scrollToBottom();
+		}
 	});
 
 	textarea.keypress(function(e){
@@ -185,19 +134,20 @@ $(function(){
 	});
 
 	chatForm.on('submit', function(e){
-
 		e.preventDefault();
 
 		// Create a new chat message and display it directly
 
 		showMessage("chatStarted");
 
-		createChatMessage(textarea.val(), name, img, moment());
-		scrollToBottom();
+		if(textarea.val().trim().length) {
+			createChatMessage(textarea.val(), name, img, moment());
+			scrollToBottom();
 
-		// Send the message to the other person in the chat
-		socket.emit('msg', {msg: textarea.val(), user: name, img: img});
+			// Send the message to the other person in the chat
+			socket.emit('msg', {msg: textarea.val(), user: name, img: img});
 
+		}
 		// Empty the textarea
 		textarea.val("");
 	});
@@ -228,12 +178,12 @@ $(function(){
 
 		var li = $(
 			'<li class=' + who + '>'+
-				'<div class="image">' +
-					'<img src=' + imgg + ' />' +
-					'<b></b>' +
-					'<i class="timesent" data-time=' + now + '></i> ' +
-				'</div>' +
-				'<p></p>' +
+			'<div class="image">' +
+			'<img src=' + imgg + ' />' +
+			'<b></b>' +
+			'<i class="timesent" data-time=' + now + '></i> ' +
+			'</div>' +
+			'<p></p>' +
 			'</li>');
 
 		// use the 'text' method to escape malicious user input

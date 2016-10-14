@@ -39,7 +39,7 @@ body {
 	font-weight: bold;
 	color:white;
 }
-.homebannertext span {
+span {
 	color: #d6441b;
 }
 
@@ -170,8 +170,8 @@ body {
 #creatorImage {
 	float: left;
 	margin: 90px 0 0 140px;
-	width: 100px;
-	height: 100px;
+	width: 50px;
+	height: 50px;
 	border-radius: 50%;
 }
 
@@ -248,8 +248,8 @@ body {
 #ownerImage {
 	float: left;
 	margin: 90px 0 0 140px;
-	width: 100px;
-	height: 100px;
+	width: 50px;
+	height: 50px;
 	border-radius: 50%;
 }
 
@@ -314,9 +314,9 @@ body {
 	padding-top: 80px;
 }
 .invite-textfield h5 {
-	 font-weight: normal;
-	 margin: 10px 0 35px;
- }
+	font-weight: normal;
+	margin: 10px 0 35px;
+}
 .invite-textfield .link {
 	width: 600px;
 	height: 35px;
@@ -360,8 +360,8 @@ body {
 #leftImage {
 	float: left;
 	margin: 90px 0 0 140px;
-	width: 100px;
-	height: 100px;
+	width: 50px;
+	height: 50px;
 	border-radius: 50%;
 }
 .nickname-left {
@@ -426,8 +426,8 @@ body {
 #noMessagesImage {
 	float: left;
 	margin: 90px 0 0 140px;
-	width: 100px;
-	height: 100px;
+	width: 50px;
+	height: 50px;
 	border-radius: 50%;
 }
 
@@ -441,7 +441,7 @@ body {
 .info {
 	text-align: left;
 	float: right;
-	margin: 65px 60px 0 0;
+	margin: 45px 90px 0 0;
 	width: 405px;
 	overflow: hidden;
 }
@@ -465,8 +465,8 @@ body {
 
 .image img {
 	float: left;
-	width: 80px;
-	height: 80px;
+	width: 50px;
+	height: 50px;
 	border-radius: 50%;
 }
 

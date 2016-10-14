@@ -9,5 +9,5 @@ module.exports={
 	"username"						:				"root",
 	"password"						:				"",
 	"database"						:				"viral",
-	'PORT':8080
+	'PORT':3000
 };

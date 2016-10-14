@@ -1,22 +1,15 @@
-// This file is required by app.js. It sets up event listeners
-// for the two main URL endpoints of the application - /create and /chat/:id
-// and listens for socket.io messages.
-
-// Use the gravatar module, to turn email addresses into avatar images:
-
-var gravatar = require('gravatar');
-
-// Export a function, so that we can pass
-// the app and io instances from the app.js file:
 
 module.exports = function(app,passport,io){
     app.get('/', function(req, res){
+       if(req.user){
+           res.redirect('/SelfyDate');
+       }
         res.render('index', { user: req.user });
     });
 
     app.get('/auth/facebook', passport.authenticate('facebook'));
     app.get('/auth/facebook/callback',
-        passport.authenticate('facebook', { successRedirect : '/', failureRedirect: '/login' }),
+        passport.authenticate('facebook', { successRedirect : '/SelfyDate', failureRedirect: '/' }),
         function(req, res) {
             res.redirect('/');
         });
@@ -29,45 +22,44 @@ module.exports = function(app,passport,io){
 
     function ensureAuthenticated(req, res, next) {
         if (req.isAuthenticated()) { return next(); }
-        res.redirect('/login')
+        res.redirect('/')
     }
-
-    app.get('/create', function(req,res){
+    app.get('/SelfyDate', function(req,res){
 
         // Generate unique id for the room
-        var id ='1' ;//Math.round((Math.random() * 1000000));
-
+        var id = Math.round((Math.random() * 1000000));
+        var name=req.user.displayName.replace(" ","");
         // Redirect to the random room
-        res.redirect('/chat/'+id);
-    });
-    app.get('/chat/:id', function(req,res){
-
-        // Render the chant.html view
-        res.render('chat');
+        res.redirect('/SelfyDate/'+id +'/'+name);
     });
 
-// Initialize a new socket.io application, named 'chat'
-    var chat = io.of('/socket').on('connection', function (socket) {
+    app.get('/SelfyDate/:id/:name', function(req,res){
+        //authenticate url with database--- req.user._json <%= (user.picture.data.url) %>
+        res.render('chat',{ user: req.params.name });
+    });
+
+    // Initialize a new socket.io application, named 'chat'
+    var chat = io.on('connection', function (socket) {
 
         // When the client emits the 'load' event, reply with the
         // number of people in this chat room
 
         socket.on('load',function(data){
-
-            if(chat.clients(data).length === 0 ) {
+            var room = findClientsSocket(io,data);
+            if(room.length === 1 ) {
 
                 socket.emit('peopleinchat', {number: 0});
             }
-            else if(chat.clients(data).length === 1) {
+            else if(room.length === 2) {
 
                 socket.emit('peopleinchat', {
                     number: 1,
-                    user: chat.clients(data)[0].username,
-                    avatar: chat.clients(data)[0].avatar,
+                    user: room[0].username,
+                    avatar: room[0].avatar,
                     id: data
                 });
             }
-            else if(chat.clients(data).length >= 2) {
+            else if(room.length >= 2) {
 
                 chat.emit('tooMany', {boolean: true});
             }
@@ -77,15 +69,16 @@ module.exports = function(app,passport,io){
         // and add them to the room
         socket.on('login', function(data) {
 
+            var room = findClientsSocket(io, data.id);
             // Only two people per room are allowed
-            if(chat.clients(data.id).length < 2){
+            if (room.length < 3) {
 
                 // Use the socket object to store data. Each client gets
                 // their own unique socket object
 
                 socket.username = data.user;
                 socket.room = data.id;
-                socket.avatar = gravatar.url(data.avatar, {s: '140', r: 'x', d: 'mm'});
+                socket.avatar = data.avatar;
 
                 // Tell the person what he should use for an avatar
                 socket.emit('img', socket.avatar);
@@ -94,16 +87,16 @@ module.exports = function(app,passport,io){
                 // Add the client to the room
                 socket.join(data.id);
 
-                if(chat.clients(data.id).length == 2) {
+                if (room.length == 2) {
 
                     var usernames = [],
                         avatars = [];
 
-                    usernames.push(chat.clients(data.id)[0].username);
-                    usernames.push(chat.clients(data.id)[1].username);
+                    usernames.push(room[0].username);
+                    usernames.push(socket.username);
 
-                    avatars.push(chat.clients(data.id)[0].avatar);
-                    avatars.push(chat.clients(data.id)[1].avatar);
+                    avatars.push(room[0].avatar);
+                    avatars.push(socket.avatar);
 
                     // Send the startChat event to all the people in the
                     // room, along with a list of people that are in it.
@@ -115,7 +108,6 @@ module.exports = function(app,passport,io){
                         avatars: avatars
                     });
                 }
-
             }
             else {
                 socket.emit('tooMany', {boolean: true});
@@ -147,4 +139,25 @@ module.exports = function(app,passport,io){
             socket.broadcast.to(socket.room).emit('receive', {msg: data.msg, user: data.user, img: data.img});
         });
     });
+
 };
+function findClientsSocket(io,roomId, namespace) {
+
+    var res = [],
+        ns = io.of(namespace ||"/");    // the default namespace is "/"
+
+    if (ns) {
+        for (var id in ns.connected) {
+            if(roomId && ns.connected[id].rooms.indexOf!=undefined) {
+                var index =ns.connected[id].rooms.indexOf(roomId) ;
+                if(index !== -1) {
+                    res.push(ns.connected[id]);
+                }
+            }
+            else {
+                res.push(ns.connected[id]);
+            }
+        }
+    }
+    return res;
+}
