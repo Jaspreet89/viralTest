@@ -8,15 +8,14 @@ var express           =     require('express')
     , bodyParser        =     require('body-parser')
     , config            =     require('./configuration/config')
     , mysql             =     require('mysql');
-var connection ;
+var connection = mysql.createConnection({
+    host     : config.host,
+    user     : config.username,
+    password : config.password,
+    database : config.database
+});
 if(config.use_database==='true')
 {
-    connection = mysql.createConnection({
-        host     : config.host,
-        user     : config.username,
-        password : config.password,
-        database : config.database
-    });
     connection.connect();
 }
 
@@ -70,5 +69,7 @@ app.use(session({ secret: 'viral', key: 'sid'}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(__dirname + '/public'));
-var io = require('socket.io').listen(app.listen(config.PORT));
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+http.listen(config.PORT);
 require('./route/routes')(app, passport,io);
