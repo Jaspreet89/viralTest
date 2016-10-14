@@ -8,14 +8,15 @@ var express           =     require('express')
     , bodyParser        =     require('body-parser')
     , config            =     require('./configuration/config')
     , mysql             =     require('mysql');
-var connection = mysql.createConnection({
-    host     : config.host,
-    user     : config.username,
-    password : config.password,
-    database : config.database
-});
+var connection ;
 if(config.use_database==='true')
 {
+    connection = mysql.createConnection({
+        host     : config.host,
+        user     : config.username,
+        password : config.password,
+        database : config.database
+    });
     connection.connect();
 }
 
